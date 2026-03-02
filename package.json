@@ -1,0 +1,35 @@
+{
+  "name": "@stbr/solana-stablecoin-standard",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "sdk/core",
+    "backend"
+  ],
+  "scripts": {
+    "build": "anchor build && npm run build:sdk",
+    "build:sdk": "npm run build --workspace=sdk/core",
+    "test": "anchor test",
+    "test:sss1": "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/sss-1.ts",
+    "test:sss2": "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/sss-2.ts",
+    "test:sss3": "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/sss-3.ts",
+    "test:lifecycle": "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/full-lifecycle.ts",
+    "test:compliance": "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/compliance.ts",
+    "test:roles": "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/roles.ts",
+    "test:edge": "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/edge-cases.ts",
+    "clean": "rm -rf target node_modules dist .anchor test-ledger"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/spl-token": "^0.4.10",
+    "@solana/web3.js": "^1.98.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.6",
+    "chai": "^4.4.1",
+    "mocha": "^10.3.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^5.7.3"
+  }
+}

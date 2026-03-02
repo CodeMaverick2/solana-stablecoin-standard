@@ -1,0 +1,9 @@
+[fuzz]
+fuzzing_with_stats = true
+allow_duplicate_txs = false
+
+[[target]]
+path = "trident-tests/fuzz_tests"
+
+[test]
+validator_startup_timeout = 10000

@@ -1,0 +1,31 @@
+[package]
+name = "fuzz_tests"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "fuzz_0"
+path = "fuzz_0/test_fuzz.rs"
+test = false
+doc = false
+
+[dependencies]
+# Trident fuzzing framework for Anchor programs
+trident-client = "0.7.0"
+
+# Anchor and Solana dependencies matching the main workspace
+anchor-lang = "0.31.1"
+anchor-spl = { version = "0.31.1", features = ["token_2022", "token_2022_extensions"] }
+
+# The stablecoin program as a library (CPI feature exposes types)
+stablecoin = { path = "../../programs/stablecoin", features = ["no-entrypoint"] }
+
+# SPL dependencies
+spl-token-2022 = { version = "6.0.0", features = ["no-entrypoint"] }
+
+# Fuzzing primitives
+arbitrary = { version = "1", features = ["derive"] }
+honggfuzz = "0.5"
+
+[features]
+default = []

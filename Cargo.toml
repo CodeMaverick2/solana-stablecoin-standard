@@ -1,0 +1,25 @@
+[workspace]
+members = ["programs/*"]
+resolver = "2"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
+
+[workspace.dependencies]
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+spl-token-2022 = { version = "6.0.0", features = ["no-entrypoint"] }
+spl-transfer-hook-interface = "0.9.0"
+spl-tlv-account-resolution = "0.9.0"
+spl-pod = "0.5.0"
+spl-type-length-value = "0.7.0"
+spl-discriminator = "0.4.1"
+constant_time_eq = "=0.3.1"
+blake3 = "=1.5.5"

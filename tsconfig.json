@@ -15,6 +15,6 @@
     "rootDir": ".",
     "types": ["mocha", "chai"]
   },
-  "include": ["tests/**/*.ts", "sdk/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "sdk"]
 }

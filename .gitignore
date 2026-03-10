@@ -32,3 +32,7 @@ Thumbs.db
 # Build artifacts
 *.so
 *.dylib
+
+# Next.js
+frontend/.next/
+frontend/tsconfig.tsbuildinfo

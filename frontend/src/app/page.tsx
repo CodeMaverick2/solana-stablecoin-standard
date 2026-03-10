@@ -5,6 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Navbar } from "@/components/Navbar";
 import { StatCard } from "@/components/StatCard";
 import { useStablecoin } from "@/hooks/useStablecoin";
+import { AdminPanel } from "@/components/AdminPanel";
 
 const PRESET_COLORS = {
   "SSS-1": "bg-blue-500/20 text-blue-300 border border-blue-500/30",
@@ -65,29 +66,29 @@ export default function Home() {
           {config && (
             <button
               onClick={refresh}
-              className="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-lg text-sm transition"
+              className={`bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-lg text-sm transition ${loading ? "animate-spin opacity-60" : ""}`}
             >
               ↻
             </button>
           )}
         </div>
 
-        {/* Loading / Error */}
-        {loading && (
+        {/* Loading — only show spinner on first load (no config yet) */}
+        {loading && !config && (
           <div className="flex items-center gap-2 text-gray-400 text-sm">
             <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
             Loading config…
           </div>
         )}
 
-        {error && (
+        {error && !config && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3">
             {error}
           </div>
         )}
 
-        {/* Config loaded */}
-        {config && !loading && (
+        {/* Config loaded — stays visible during refresh */}
+        {config && (
           <div className="space-y-8">
             {/* Header row */}
             <div className="flex items-center justify-between">
@@ -194,14 +195,22 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Connect wallet CTA */}
-            {!connected && (
+            {/* Admin Panel — shown when wallet is connected */}
+            {connected ? (
+              <AdminPanel
+                configAddress={config.configAddress}
+                mintAddress={config.mint}
+                isPaused={config.isPaused}
+                decimals={config.decimals}
+                onSuccess={refresh}
+              />
+            ) : (
               <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5 text-center">
                 <p className="text-purple-300 text-sm mb-1 font-medium">
                   Connect your wallet to perform operations
                 </p>
                 <p className="text-gray-500 text-xs">
-                  Mint, burn, freeze, blacklist, seize — all from a single dashboard.
+                  Mint, pause/unpause, blacklist — all from a single dashboard.
                 </p>
               </div>
             )}
@@ -217,17 +226,21 @@ export default function Home() {
               Paste any SSS-1, SSS-2, or SSS-3 stablecoin mint address to inspect its
               configuration, supply stats, and feature flags.
             </p>
-            <div className="mt-6 text-xs text-gray-600">
-              Deployed stablecoin (devnet):{" "}
-              <button
-                onClick={() => {
-                  setMintInput("B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs");
-                  setMintAddress("B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs");
-                }}
-                className="text-purple-400 hover:underline"
-              >
-                B1zq...pHs
-              </button>
+            <div className="mt-6 text-xs text-gray-600 space-y-1">
+              <p>Try a live devnet mint:</p>
+              {[
+                ["SSS-1 DUSD", "5qLVX2bZBeCF3XLkvKKb4VJM4dvu6nNqboChT6q4TnD7"],
+                ["SSS-2 RUSD", "B3RPAUgYoLqgvdwJX7ryPemj8wtzfNamuCvfC2DbJLAz"],
+                ["SSS-3 PUSD", "8kHKH3CGBsEaPjxQisrSCd1EpXF2XG8dDe4PQFcK8WD3"],
+              ].map(([label, addr]) => (
+                <button
+                  key={addr}
+                  onClick={() => { setMintInput(addr); setMintAddress(addr); }}
+                  className="block text-purple-400 hover:underline"
+                >
+                  {label} — {addr.slice(0, 8)}…{addr.slice(-6)}
+                </button>
+              ))}
             </div>
           </div>
         )}

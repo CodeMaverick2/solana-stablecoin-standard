@@ -9,8 +9,10 @@ This document covers the REST API provided by the backend service. The backend i
 ## Base URL
 
 ```
-http://localhost:3000
+http://localhost:3001
 ```
+
+> Default host port is **3001** (mapped from container port 3000) to avoid conflicting with the Next.js frontend on port 3000.
 
 For production deployments, use HTTPS and configure a reverse proxy (e.g., nginx, Caddy, or a cloud load balancer).
 
@@ -643,7 +645,7 @@ services:
   backend:
     build: .
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file: .env
     depends_on:
       - redis

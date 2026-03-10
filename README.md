@@ -140,10 +140,12 @@ anchor deploy --provider.cluster devnet
 ```bash
 cd backend
 cp .env.example .env        # fill in STABLECOIN_MINT if you have one
-docker compose up           # starts Express API + Redis
+docker compose up           # starts Express API on :3001 + Redis on :6379
 ```
 
-The API will be available at `http://localhost:3000`. See [docs/API.md](docs/API.md) for all endpoints.
+The API will be available at `http://localhost:3001`. See [docs/API.md](docs/API.md) for all endpoints.
+
+> **Note:** The backend runs on port **3001** by default so it does not conflict with the Next.js frontend on port 3000.
 
 ### Initialize a Stablecoin (CLI)
 
@@ -202,8 +204,50 @@ Both programs are deployed and verified on Solana Devnet.
 
 | Program | Address | Deployment Signature |
 |---------|---------|---------------------|
-| Stablecoin | [`B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs`](https://explorer.solana.com/address/B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs?cluster=devnet) | `4KzeeBZNZxL3pjwnrTZNauFBKoeHWCgNNbs1AVRvQ4TCQLwcgwk6eYKu9S1Pf7pWD4osK6CNhTp4BBkaEvRiwRJE` |
-| Transfer Hook | [`HgSUZDiLt8UWwzaxhCWwLPPs9zB1F7WTzCFSVmQSaLou`](https://explorer.solana.com/address/HgSUZDiLt8UWwzaxhCWwLPPs9zB1F7WTzCFSVmQSaLou?cluster=devnet) | `5tTgyAtJv7QybppZmJ4A1fFDCQGbTPqxYZ1MxLwDBbSRs689ihpuajvTH1ivqirMThAjsSrpCC7nZSsEKDLCVyKX` |
+| Stablecoin | [`B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs`](https://explorer.solana.com/address/B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs?cluster=devnet) | [`4KzeeBZN…RiwRJE`](https://explorer.solana.com/tx/4KzeeBZNZxL3pjwnrTZNauFBKoeHWCgNNbs1AVRvQ4TCQLwcgwk6eYKu9S1Pf7pWD4osK6CNhTp4BBkaEvRiwRJE?cluster=devnet) |
+| Transfer Hook | [`HgSUZDiL…SaLou`](https://explorer.solana.com/address/HgSUZDiLt8UWwzaxhCWwLPPs9zB1F7WTzCFSVmQSaLou?cluster=devnet) | [`5tTgyAtJ…CVyKX`](https://explorer.solana.com/tx/5tTgyAtJv7QybppZmJ4A1fFDCQGbTPqxYZ1MxLwDBbSRs689ihpuajvTH1ivqirMThAjsSrpCC7nZSsEKDLCVyKX?cluster=devnet) |
+
+**Verification:** Both program IDs are live on devnet. You can verify with:
+
+```bash
+solana program show B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs --url devnet
+solana program show HgSUZDiLt8UWwzaxhCWwLPPs9zB1F7WTzCFSVmQSaLou --url devnet
+```
+
+---
+
+## Live Devnet Demo Tokens
+
+Three stablecoins are deployed and funded on devnet. You can inspect them immediately without deploying anything:
+
+| Token | Preset | Mint Address | Config PDA | Supply |
+|-------|--------|-------------|-----------|--------|
+| **DUSD** | SSS-1 (Minimal) | [`5qLVX2bZ…TnD7`](https://explorer.solana.com/address/5qLVX2bZBeCF3XLkvKKb4VJM4dvu6nNqboChT6q4TnD7?cluster=devnet) | `H8QgPMh7s9Wbt1XRD7mP6spmnR5LmnUgoZwpv1it5ADV` | 1 000 000 |
+| **RUSD** | SSS-2 (Compliant) | [`B3RPAUgY…JLAz`](https://explorer.solana.com/address/B3RPAUgYoLqgvdwJX7ryPemj8wtzfNamuCvfC2DbJLAz?cluster=devnet) | `5PNfiGnWYTBTrKVhUsPJy8kpEAxm684KAq62Ecz5TR5m` | 5 000 000 |
+| **PUSD** | SSS-3 (Private) | [`8kHKH3CG…WD3`](https://explorer.solana.com/address/8kHKH3CGBsEaPjxQisrSCd1EpXF2XG8dDe4PQFcK8WD3?cluster=devnet) | `H5dmoyi7ixmQ4pKSZC9wjhjETdX9GNaoQQ7ro5teDu22` | 2 500 000 |
+
+**Reviewer quick-check (no deploy required):**
+
+```bash
+# Install the CLI
+npm install && npm run build:sdk
+
+# Inspect each live stablecoin — no keypair needed for read-only commands
+sss-token status --config H8QgPMh7s9Wbt1XRD7mP6spmnR5LmnUgoZwpv1it5ADV --keypair ~/.config/solana/id.json
+sss-token status --config 5PNfiGnWYTBTrKVhUsPJy8kpEAxm684KAq62Ecz5TR5m --keypair ~/.config/solana/id.json
+sss-token status --config H5dmoyi7ixmQ4pKSZC9wjhjETdX9GNaoQQ7ro5teDu22 --keypair ~/.config/solana/id.json
+
+# Supply stats
+sss-token supply --config H8QgPMh7s9Wbt1XRD7mP6spmnR5LmnUgoZwpv1it5ADV --keypair ~/.config/solana/id.json
+
+# SSS-2: check a blacklisted address
+sss-token blacklist check --config 5PNfiGnWYTBTrKVhUsPJy8kpEAxm684KAq62Ecz5TR5m --address 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin --keypair ~/.config/solana/id.json
+
+# SSS-3: check allowlist
+sss-token allowlist check --config H5dmoyi7ixmQ4pKSZC9wjhjETdX9GNaoQQ7ro5teDu22 --address 315v8xkbFkLWc6LQ28RooSHkziBhGYkX1zpoXcCSQN2y --keypair ~/.config/solana/id.json
+```
+
+Or paste any mint address directly into the [frontend dashboard](http://localhost:3000) to see preset detection, supply stats, and feature flags in the UI.
 
 ---
 
@@ -236,20 +280,20 @@ The `sss-token` CLI provides full operational control over a stablecoin instance
 | `sss-token roles update` | Update role assignments |
 | `sss-token authority transfer <new>` | Initiate two-step authority transfer |
 | `sss-token authority accept` | Accept a pending authority transfer |
-| `sss-token holders` | List token holders with balances |
+| `sss-token holders` | List token holders with balances (requires RPC with secondary index support) |
 | `sss-token audit-log` | Query the on-chain audit trail |
 
 ---
 
 ## Testing
 
-105 tests passing across 7 test files.
+**120 tests passing across 8 test files — all green.**
 
 ```bash
-# Run all tests
+# Run all 120 tests (builds programs, starts local validator, runs all suites)
 anchor test
 
-# Run specific test suites
+# Run individual suites (skip rebuild — uses previously built programs)
 npm run test:sss1          # SSS-1 preset lifecycle tests
 npm run test:sss2          # SSS-2 preset lifecycle tests
 npm run test:sss3          # SSS-3 private stablecoin tests
@@ -257,6 +301,14 @@ npm run test:lifecycle     # Full end-to-end lifecycle
 npm run test:compliance    # Blacklist and seizure tests
 npm run test:roles         # Role-based access control tests
 npm run test:edge          # Edge cases and error conditions
+npm run test:token-extensions  # Token-2022 extension verification (mint authorities, account sizes)
+```
+
+**Devnet smoke-test against live tokens (CLI):**
+
+```bash
+# Runs 26 CLI commands against the deployed devnet instances — no local validator needed
+bash run_cli_tests.sh
 ```
 
 ### Test Coverage
@@ -265,11 +317,12 @@ npm run test:edge          # Edge cases and error conditions
 |-------|------|---------------|
 | SSS-1 | `tests/sss-1.ts` | Full SSS-1 lifecycle: init, mint, transfer, freeze, thaw, burn |
 | SSS-2 | `tests/sss-2.ts` | Full SSS-2 lifecycle: init, mint, transfer, blacklist, freeze, seize, burn |
-| SSS-3 | `tests/sss-3.ts` | Private stablecoin: allowlist enforcement, confidential transfer extension |
+| SSS-3 | `tests/sss-3.ts` | Private stablecoin: allowlist enforcement, CT extension size verification, seize bypass proof, allowlist independence |
 | Lifecycle | `tests/full-lifecycle.ts` | End-to-end flows for both presets |
 | Compliance | `tests/compliance.ts` | Blacklist enforcement, transfer hook rejection, seizure |
 | Roles | `tests/roles.ts` | Minter quotas, pauser, freezer, blacklister, seizer access control |
 | Edge Cases | `tests/edge-cases.ts` | Zero amounts, self-transfers, double-blacklist, unauthorized callers, paused operations |
+| Token-2022 Extensions | `tests/token-extensions.ts` | Verifies Token-2022 extension configuration on-chain for all three presets: mint authorities are PDAs, extension account sizes grow correctly per preset, SSS-3 CT extension bytes confirmed |
 
 ---
 
@@ -334,17 +387,20 @@ solana-stablecoin-standard/
 +-- frontend/                       # Example Next.js 14 dashboard
 |   +-- src/
 |   |   +-- app/page.tsx            # Stablecoin inspector: supply, flags, preset detection
-|   |   +-- components/             # Navbar, StatCard, WalletProvider
-|   |   +-- hooks/useStablecoin.ts  # On-chain config parsing (raw bytes, no Anchor dep)
+|   |   +-- components/             # Navbar, StatCard, WalletProvider, AdminPanel
+|   |   +-- hooks/useStablecoin.ts  # On-chain config parsing
+|   |   +-- hooks/useAdminActions.ts # Anchor write operations (mint, pause, blacklist)
+|   |   +-- idl/stablecoin.json     # Bundled IDL for client-side tx building
 |   +-- package.json
-+-- tests/                          # Integration tests (ts-mocha)
++-- tests/                          # Integration tests (ts-mocha, 120 tests)
 |   +-- sss-1.ts                    # SSS-1 lifecycle
 |   +-- sss-2.ts                    # SSS-2 lifecycle
-|   +-- sss-3.ts                    # SSS-3 private stablecoin + allowlist
+|   +-- sss-3.ts                    # SSS-3 private stablecoin + allowlist + CT extension
 |   +-- full-lifecycle.ts
 |   +-- compliance.ts
 |   +-- roles.ts
 |   +-- edge-cases.ts
+|   +-- token-extensions.ts         # Token-2022 extension verification (mint authorities, sizes)
 +-- trident-tests/                  # Fuzz tests (honggfuzz via Trident)
 |   +-- fuzz_tests/fuzz_0/          # Supply, pause, and quota invariant checks
 +-- docs/                           # Documentation (9 files)
@@ -403,16 +459,68 @@ See [docs/ORACLE.md](docs/ORACLE.md).
 `sdk/core/src/tui.ts` — terminal UI for real-time monitoring and operations. Uses only Node.js `readline` and ANSI escape codes (zero external UI dependencies).
 
 ```bash
-npx ts-node sdk/core/src/tui.ts
+sss-token tui --config <config-address> --keypair ~/.config/solana/id.json
 ```
+
+**TUI screenshot:**
+
+```
+╔══════════════════════════════════════════════╗
+║   Solana Stablecoin Standard — Admin TUI     ║
+╚══════════════════════════════════════════════╝
+  Mint:   B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs
+  Config: 9XyRa7Pu...
+
+─────────────────────────────────────────────────
+  Main Menu
+─────────────────────────────────────────────────
+  [1]  View Status
+  [2]  Mint Tokens
+  [3]  Burn Tokens
+  [4]  Pause / Unpause
+  [5]  Freeze / Thaw Account
+  [6]  Manage Blacklist
+  [7]  Manage Allowlist
+  [8]  Manage Minters
+  [9]  View Holders
+  [10] Roles (view / update)
+  [0]  Exit
+─────────────────────────────────────────────────
+Select an option:
+```
+
+All ten menu actions are fully interactive — each prompts for required inputs and shows the transaction signature on success.
 
 ### Example Frontend
 
-`frontend/` — Next.js 14 dashboard for inspecting SSS stablecoins: supply stats, feature flags, preset detection (SSS-1/2/3), and Solana Explorer links. Connects via Phantom or Solflare.
+`frontend/` — Next.js 14 admin dashboard. Connects via Phantom or Solflare to inspect and operate any SSS stablecoin.
+
+**Features:**
+- Config lookup by mint address — preset detection (SSS-1/2/3), supply stats, feature flags
+- **Admin Panel** (wallet connected): Mint tokens, Pause/Unpause, Blacklist management
+- Solana Explorer links for all accounts and transactions
 
 ```bash
 cd frontend && npm install && npm run dev
+# open http://localhost:3000
 ```
+
+**Frontend Walkthrough (for demo/video):**
+
+1. **Start** — open `http://localhost:3000`
+2. **Connect wallet** — click "Select Wallet" (top-right), choose Phantom or Solflare set to **Devnet**
+3. **Look up a stablecoin** — paste any SSS mint address in the search box and click "Load". The dashboard shows:
+   - Preset badge (SSS-1 / SSS-2 / SSS-3)
+   - Total minted, burned, circulating supply
+   - Active extension flags (transfer hook, permanent delegate, confidential transfer, allowlist)
+   - Config PDA address with Solana Explorer link
+4. **Admin Panel** (only visible when wallet is connected):
+   - **Mint Tokens tab** — enter recipient wallet address + amount, click "Mint". Requires your wallet to be an authorized minter with quota remaining. Shows the tx signature on success.
+   - **Pause / Unpause tab** — shows current status (red = paused, green = active). Click the button to toggle. Requires pauser role.
+   - **Blacklist tab** — toggle Add/Remove, enter target address (+ reason for Add), click submit. Requires blacklister role.
+5. **Transaction links** — every successful write operation shows a Solana Explorer devnet link you can click to verify on-chain.
+
+> **Prerequisites for write operations:** Your connected wallet must hold the relevant role (minter/pauser/blacklister). When you initialize a stablecoin with `sss-token init`, the deployer wallet is set as master authority and default role holder.
 
 ### Fuzz Tests
 
@@ -431,7 +539,7 @@ cd frontend && npm install && npm run dev
 | SDK | TypeScript, `@coral-xyz/anchor`, `@solana/spl-token`, `@solana/web3.js` |
 | CLI | Commander.js, TOML config support |
 | Backend | Express.js, Redis (ioredis), Pino logger, Docker |
-| Testing | ts-mocha, Chai, 105 integration tests across 7 files |
+| Testing | ts-mocha, Chai, 120 integration tests across 8 files |
 
 ### Dependency Versions
 

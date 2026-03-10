@@ -96,8 +96,10 @@ export class SolanaStablecoin {
       symbol: params.symbol,
       uri,
       decimals,
-      enablePermanentDelegate: preset.enablePermanentDelegate,
-      enableTransferHook: preset.enableTransferHook,
+      enablePermanentDelegate: preset.enablePermanentDelegate ?? false,
+      enableTransferHook: preset.enableTransferHook ?? false,
+      enableConfidentialTransfer: preset.enableConfidentialTransfer ?? false,
+      enableAllowlist: preset.enableAllowlist ?? false,
     };
 
     const signature = await stablecoinProgram.methods
@@ -217,6 +219,7 @@ export class SolanaStablecoin {
         minter: params.minter,
         mint: this.mintAddress,
         recipientTokenAccount: recipientAta,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
       })
       .rpc();
   }
@@ -237,6 +240,7 @@ export class SolanaStablecoin {
         burner,
         mint: this.mintAddress,
         burnerTokenAccount: burnerAta,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
       })
       .rpc();
   }
@@ -249,6 +253,7 @@ export class SolanaStablecoin {
         freezer: this.provider.wallet.publicKey,
         mint: this.mintAddress,
         targetTokenAccount: targetAta,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
       })
       .rpc();
   }
@@ -261,6 +266,7 @@ export class SolanaStablecoin {
         freezer: this.provider.wallet.publicKey,
         mint: this.mintAddress,
         targetTokenAccount: targetAta,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
       })
       .rpc();
   }
@@ -474,6 +480,7 @@ export class SolanaStablecoin {
             mint: self.mintAddress,
             fromTokenAccount: from,
             toTokenAccount: to,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
           })
           .rpc();
       },

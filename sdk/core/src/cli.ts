@@ -16,6 +16,7 @@ import * as fs from "fs";
 import * as toml from "toml";
 
 import { SolanaStablecoin } from "./stablecoin";
+import { StablecoinTUI } from "./tui";
 import {
   getConfigAddress,
   getRolesAddress,
@@ -23,7 +24,7 @@ import {
   getAllowlistAddress,
   getMinterAddress,
 } from "./pda";
-import { Presets, SSS_1, SSS_2 } from "./presets";
+import { Presets, SSS_1, SSS_2, SSS_3 } from "./presets";
 import type {
   CreateParams,
   PresetConfig,
@@ -251,7 +252,7 @@ program
 program
   .command("init")
   .description("Initialize a new stablecoin")
-  .option("--preset <preset>", "Standard preset: sss-1 or sss-2")
+  .option("--preset <preset>", "Standard preset: sss-1, sss-2, or sss-3")
   .option("--custom <path>", "Path to a custom TOML config file")
   .option("--name <name>", "Token name", "My Stablecoin")
   .option("--symbol <symbol>", "Token symbol", "STBL")
@@ -306,9 +307,13 @@ program
             preset = SSS_2;
             transferHookProgramId = TRANSFER_HOOK_PROGRAM_ID;
             break;
+          case "sss-3":
+            preset = SSS_3;
+            transferHookProgramId = TRANSFER_HOOK_PROGRAM_ID;
+            break;
           default:
             console.error(
-              `Error: Unknown preset "${opts.preset}". Use sss-1 or sss-2.`
+              `Error: Unknown preset "${opts.preset}". Use sss-1, sss-2, or sss-3.`
             );
             process.exit(1);
         }
@@ -336,7 +341,11 @@ program
       printField("URI:", uri || "(none)");
       printField(
         "Preset:",
-        preset.enableTransferHook ? "SSS-2 (Compliant)" : "SSS-1 (Minimal)"
+        preset.enableAllowlist
+          ? "SSS-3 (Private)"
+          : preset.enableTransferHook
+          ? "SSS-2 (Compliant)"
+          : "SSS-1 (Minimal)"
       );
       printField(
         "Permanent Delegate:",
@@ -634,7 +643,11 @@ program
       );
       printField(
         "Standard:",
-        config.enableTransferHook ? "SSS-2 (Compliant)" : "SSS-1 (Minimal)"
+        config.enableAllowlist
+          ? "SSS-3 (Private)"
+          : config.enableTransferHook
+          ? "SSS-2 (Compliant)"
+          : "SSS-1 (Minimal)"
       );
       divider();
 
@@ -1599,10 +1612,30 @@ allowlistCmd
     }
   });
 
+// ───────────────────────────── tui ─────────────────────────────
+
+program
+  .command("tui")
+  .description("Launch the interactive admin TUI (requires --config)")
+  .action(async () => {
+    try {
+      const globalOpts = program.opts();
+      const sdk = await loadSdk(globalOpts);
+      const tui = new StablecoinTUI(sdk);
+      await tui.run();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`\nError launching TUI: ${message}\n`);
+      process.exit(1);
+    }
+  });
+
 // ───────────────────────────── Parse & Run ─────────────────────────────
 
-program.parseAsync(process.argv).catch((err: unknown) => {
-  const message = err instanceof Error ? err.message : String(err);
-  console.error(`\nUnexpected error: ${message}\n`);
-  process.exit(1);
-});
+program.parseAsync(process.argv)
+  .then(() => process.exit(0))
+  .catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`\nUnexpected error: ${message}\n`);
+    process.exit(1);
+  });

@@ -7,6 +7,7 @@ import { PublicKey } from "@solana/web3.js";
 const STABLECOIN_PROGRAM_ID = new PublicKey("B1zqgaJkbVzNoMagPyAJdgveArzaTW6fkyk3JtSq1pHs");
 
 export interface ConfigInfo {
+  configAddress: string;
   mint: string;
   decimals: number;
   isPaused: boolean;
@@ -66,6 +67,7 @@ export function useStablecoin(mintAddressStr: string) {
           : "SSS-1";
 
       setConfig({
+        configAddress: configPda.toBase58(),
         mint: mintPubkey.toBase58(),
         decimals,
         isPaused,

@@ -393,4 +393,124 @@ describe("SSS-3: Private Stablecoin Lifecycle", () => {
     expect(config.totalMinted.toNumber()).to.equal(MINT_AMOUNT.toNumber());
     expect(config.totalBurned.toNumber()).to.equal(0);
   });
+
+  it("ConfidentialTransferMint extension occupies space on the SSS-3 mint account", async () => {
+    const info = await provider.connection.getAccountInfo(mintKeypair.publicKey);
+    expect(info).to.not.be.null;
+    // Token-2022 owns this account
+    expect(info!.owner.toBase58()).to.equal(TOKEN_2022_PROGRAM_ID.toBase58());
+    // SSS-3 has 4 extensions: MetadataPointer + PermanentDelegate + TransferHook +
+    // ConfidentialTransferMint. The ConfidentialTransferMint extension alone adds ~71 bytes
+    // (authority + auto_approve + auditor ElGamal pubkey fields).
+    // Total account is significantly larger than the base 82-byte Token-2022 mint.
+    expect(info!.data.length).to.be.greaterThan(350);
+  });
+
+  it("Seize bypasses allowlist in SSS-3 — burn+mint does not trigger transfer hook", async () => {
+    // recipient2 still holds 200 tokens from the earlier allowlist-gated transfer.
+    // Even though the transfer hook would reject non-allowlisted destinations,
+    // seize uses burn_checked + mint_to_checked — these bypass the hook entirely.
+    const seizeAmount = new BN(50_000_000); // 50 tokens
+
+    // Treasury ATA for authority (not on the allowlist — proves hook is bypassed)
+    const treasuryAta = getAssociatedTokenAddressSync(
+      mintKeypair.publicKey,
+      authority.publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
+    );
+
+    // Create treasury ATA
+    try {
+      const createTx = new Transaction().add(
+        createAssociatedTokenAccountInstruction(
+          authority.publicKey,
+          treasuryAta,
+          authority.publicKey,
+          mintKeypair.publicKey,
+          TOKEN_2022_PROGRAM_ID
+        )
+      );
+      await sendAndConfirmTransaction(provider.connection, createTx, [(authority as any).payer]);
+    } catch { /* may already exist */ }
+
+    const beforeFrom = await getAccount(
+      provider.connection, recipient2Ata, undefined, TOKEN_2022_PROGRAM_ID
+    );
+
+    await stablecoinProgram.methods
+      .seize(seizeAmount)
+      .accounts({
+        seizer: authority.publicKey,
+        roles: rolesPda,
+        config: configPda,
+        mint: mintKeypair.publicKey,
+        fromTokenAccount: recipient2Ata,
+        toTokenAccount: treasuryAta,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+      })
+      .rpc();
+
+    const afterFrom = await getAccount(
+      provider.connection, recipient2Ata, undefined, TOKEN_2022_PROGRAM_ID
+    );
+    // Source balance decreased by seizeAmount
+    expect(Number(afterFrom.amount)).to.equal(
+      Number(beforeFrom.amount) - seizeAmount.toNumber()
+    );
+  });
+
+  it("Allowlist entries are independent — removing one does not affect others", async () => {
+    const addr1 = Keypair.generate().publicKey;
+    const addr2 = Keypair.generate().publicKey;
+    const addr3 = Keypair.generate().publicKey;
+
+    const pda1 = getAllowlistEntryPda(addr1);
+    const pda2 = getAllowlistEntryPda(addr2);
+    const pda3 = getAllowlistEntryPda(addr3);
+
+    // Add all three addresses with different reasons
+    for (const [addr, pda, reason] of [
+      [addr1, pda1, "KYC batch A"],
+      [addr2, pda2, "KYC batch A"],
+      [addr3, pda3, "KYC batch B"],
+    ] as [PublicKey, PublicKey, string][]) {
+      await stablecoinProgram.methods
+        .addToAllowlist(addr, reason)
+        .accounts({
+          payer: authority.publicKey,
+          blacklister: authority.publicKey,
+          roles: rolesPda,
+          config: configPda,
+          allowlistEntry: pda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+    }
+
+    // Remove only addr2
+    await stablecoinProgram.methods
+      .removeFromAllowlist(addr2)
+      .accounts({
+        payer: authority.publicKey,
+        blacklister: authority.publicKey,
+        roles: rolesPda,
+        config: configPda,
+        allowlistEntry: pda2,
+      })
+      .rpc();
+
+    // addr1 and addr3 must still exist with their original data
+    const entry1 = await stablecoinProgram.account.allowlistEntry.fetch(pda1);
+    expect(entry1.address.toBase58()).to.equal(addr1.toBase58());
+    expect(entry1.reason).to.equal("KYC batch A");
+
+    const entry3 = await stablecoinProgram.account.allowlistEntry.fetch(pda3);
+    expect(entry3.address.toBase58()).to.equal(addr3.toBase58());
+    expect(entry3.reason).to.equal("KYC batch B");
+
+    // addr2's PDA must be closed
+    const closedInfo = await provider.connection.getAccountInfo(pda2);
+    expect(closedInfo).to.be.null;
+  });
 });

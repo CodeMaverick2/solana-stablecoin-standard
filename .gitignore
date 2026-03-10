@@ -36,3 +36,4 @@ Thumbs.db
 # Next.js
 frontend/.next/
 frontend/tsconfig.tsbuildinfo
+frontend/package-lock.json

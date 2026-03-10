@@ -4,8 +4,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy dependency manifests first for layer caching
-COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts
+COPY package.json ./
+RUN npm install --ignore-scripts
 
 # Copy source and build
 COPY tsconfig.json ./
@@ -21,8 +21,8 @@ WORKDIR /app
 RUN addgroup -S sss && adduser -S sss -G sss
 
 # Copy dependency manifests and install production-only deps
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+COPY package.json ./
+RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy built output from builder
 COPY --from=builder /app/dist ./dist

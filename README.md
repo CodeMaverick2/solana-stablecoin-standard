@@ -116,16 +116,18 @@ The Solana Stablecoin Standard provides a layered architecture for creating stab
 git clone https://github.com/CodeMaverick2/solana-stablecoin-standard.git
 cd solana-stablecoin-standard
 npm install
+npm run build:sdk
+
+# Make the sss-token CLI available in your shell
+export PATH="$PATH:$(pwd)/node_modules/.bin"
 ```
 
-### Build
+> Add the export to your `~/.bashrc` or `~/.zshrc` to make it permanent.
+
+### Build (on-chain programs)
 
 ```bash
-# Build on-chain programs
 anchor build
-
-# Build TypeScript SDK
-npm run build:sdk
 ```
 
 ### Deploy (Devnet)
@@ -229,10 +231,11 @@ Three stablecoins are deployed and funded on devnet. You can inspect them immedi
 **Reviewer quick-check (no deploy required):**
 
 ```bash
-# Install the CLI
+# Install and build (once)
 npm install && npm run build:sdk
+export PATH="$PATH:$(pwd)/node_modules/.bin"
 
-# Inspect each live stablecoin — no keypair needed for read-only commands
+# Inspect each live stablecoin
 sss-token status --config H8QgPMh7s9Wbt1XRD7mP6spmnR5LmnUgoZwpv1it5ADV --keypair ~/.config/solana/id.json
 sss-token status --config 5PNfiGnWYTBTrKVhUsPJy8kpEAxm684KAq62Ecz5TR5m --keypair ~/.config/solana/id.json
 sss-token status --config H5dmoyi7ixmQ4pKSZC9wjhjETdX9GNaoQQ7ro5teDu22 --keypair ~/.config/solana/id.json
@@ -241,10 +244,10 @@ sss-token status --config H5dmoyi7ixmQ4pKSZC9wjhjETdX9GNaoQQ7ro5teDu22 --keypair
 sss-token supply --config H8QgPMh7s9Wbt1XRD7mP6spmnR5LmnUgoZwpv1it5ADV --keypair ~/.config/solana/id.json
 
 # SSS-2: check a blacklisted address
-sss-token blacklist check --config 5PNfiGnWYTBTrKVhUsPJy8kpEAxm684KAq62Ecz5TR5m --address 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin --keypair ~/.config/solana/id.json
+sss-token blacklist check 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin --config 5PNfiGnWYTBTrKVhUsPJy8kpEAxm684KAq62Ecz5TR5m --keypair ~/.config/solana/id.json
 
 # SSS-3: check allowlist
-sss-token allowlist check --config H5dmoyi7ixmQ4pKSZC9wjhjETdX9GNaoQQ7ro5teDu22 --address 315v8xkbFkLWc6LQ28RooSHkziBhGYkX1zpoXcCSQN2y --keypair ~/.config/solana/id.json
+sss-token allowlist check 315v8xkbFkLWc6LQ28RooSHkziBhGYkX1zpoXcCSQN2y --config H5dmoyi7ixmQ4pKSZC9wjhjETdX9GNaoQQ7ro5teDu22 --keypair ~/.config/solana/id.json
 ```
 
 Or paste any mint address directly into the [frontend dashboard](http://localhost:3000) to see preset detection, supply stats, and feature flags in the UI.
